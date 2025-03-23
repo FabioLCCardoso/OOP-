@@ -3,57 +3,72 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package game;
-import javax.swing.*;
+
 import java.awt.Color;
+import java.awt.Image;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+
 /**
  *
  * @author fabio
  */
 public abstract class Zombie {
     protected int x, y;
+    protected int health;
     protected GameGrid gameGrid;
-    protected Attributes atributos;
-    protected ImageIcon imagem;
-    
-    public Zombie(GameGrid gameGrid, int x, int y, int saude){
-        this.gameGrid = gameGrid;
+    protected boolean alive;
+    protected char type;
+
+    public Zombie(int x, int y, GameGrid gameGrid, char type) {
         this.x = x;
         this.y = y;
-        this.atributos = new Attributes(saude, 0, Difficulty.DIFICIL);
-        updatePosition();
+        this.gameGrid = gameGrid;
+        this.alive = true;
+        this.type = type;
+        updateIcon(true); // Inicializa como visível por padrão (será ajustado depois)
     }
-    protected void updatePosition(){
-        gameGrid.getButton(x , y).setIcon(imagem);
-        gameGrid.getButton(x , y).setEnabled(true);
-    }
-    protected boolean isAlive(){
-        return atributos.getSaude() > 0;
-    }
-    public int getX(){
-        return x;
-    }
-    public int getY(){
-        return y;
-    }
-    public Attributes getAtributos(){
-        return atributos;
-    }
-    protected void zombieMove(int dx, int dy){
+
+    public void moveTowards(int targetX, int targetY, char[][] mapData) {
+        int dx = Integer.compare(targetX, x);
+        int dy = Integer.compare(targetY, y);
         int newX = x + dx;
         int newY = y + dy;
-        if(isValidMove(newX, newY)){
-            gameGrid.getButton(x,y).setIcon(null);
-            gameGrid.getButton(x, y).setEnabled(false);
+
+        if (isValidMove(newX, newY, mapData)) {
+            mapData[x][y] = 'V'; // Limpa a posição anterior
+            JButton button = gameGrid.getButton(x, y);
+            button.setEnabled(false);
             x = newX;
             y = newY;
-            updatePosition();
+            mapData[x][y] = type; // Atualiza nova posição
+            updateIcon(true); // Será ajustado pelo GameWindow
         }
     }
-    protected boolean isValidMove(int newX, int newY){
-        //check if its inside the limits and if there is a wall
-        if((newX >= 0 && newX < gameGrid.getRows() && newY >= 0 && newY < gameGrid.getCols())) {
-            return gameGrid.getCell(newX, newY) != 'P';
-        }
-        return false;
+
+    protected boolean isValidMove(int newX, int newY, char[][] mapData) {
+        return newX >= 0 && newX < 10 && newY >= 0 && newY < 10 && 
+               (mapData[newX][newY] == 'V' || mapData[newX][newY] == 'H');
+    }
+
+    public void clearPosition(char[][] mapData) {
+        JButton button = gameGrid.getButton(x, y);
+        button.setToolTipText("Empty Space");
+        ImageIcon originalIcon = new ImageIcon(getClass().getResource("/game/assets/hero.png"));
+        Image scaledImage = originalIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+        button.setIcon(new ImageIcon(scaledImage));
+        button.setBackground(Color.BLUE);
+        button.setEnabled(true);
+        mapData[x][y] = 'H';
+    }
+
+    public abstract void updateIcon(boolean visible);
+
+    public int getX() { return x; }
+    public int getY() { return y; }
+    public boolean isAlive() { return alive; }
+    public void takeDamage(int damage) {
+        health -= damage;
+        if (health <= 0) alive = false;
     }
 }

@@ -4,19 +4,12 @@
  */
 package game;
 
-import java.io.IOException;
-
 /**
  *
  * @author fabio
  */
 public class Game {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) throws IOException{
-        new gameWindow(); //create game's window
+    public static void main(String[] args) {
+        new WelcomeScreen();
     }
-    
 }
